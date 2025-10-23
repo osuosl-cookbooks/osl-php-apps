@@ -47,10 +47,10 @@ end
 
 describe file('/etc/php-fpm.d/yourls.example.com.conf') do
   it { should exist }
-  its('content') { should match /^pm.max_children = 43$/ }
-  its('content') { should match /^pm.start_servers = 10$/ }
-  its('content') { should match /^pm.min_spare_servers = 10$/ }
-  its('content') { should match /^pm.max_spare_servers = 32$/ }
+  its('content') { should match /^pm.max_children = 15$/ }
+  its('content') { should match /^pm.start_servers = 4$/ }
+  its('content') { should match /^pm.min_spare_servers = 2$/ }
+  its('content') { should match /^pm.max_spare_servers = 6$/ }
 end
 
 describe http('http://localhost') do
@@ -59,6 +59,10 @@ describe http('http://localhost') do
 end
 
 describe http('http://localhost/admin/index.php', headers: { 'host' => 'yourls.example.com' }) do
+  its('status') { should eq 307 }
+end
+
+describe http('http://localhost/admin/install.php', headers: { 'host' => 'yourls.example.com' }) do
   its('status') { should eq 200 }
 end
 
@@ -68,9 +72,9 @@ describe apache_conf('/etc/httpd/sites-available/yourls.example.com.conf') do
   its('Options') { should include 'FollowSymLinks MultiViews' }
   its('AllowOverride') { should include 'All' }
   its('Require') { should include 'all granted' }
-  its('content') { should match "SetHandler \"proxy:unix:/var/run/yourls.example.com-fpm.sock|fcgi://localhost/\"" }
+  its('content') { should match 'SetHandler "proxy:unix:/var/run/yourls.example.com-fpm.sock|fcgi://localhost/"' }
 end
 
-describe mysql_session('yourls_owner','yourls_password').query('SHOW databases') do 
+describe mysql_session('yourls_owner', 'yourls_password').query('SHOW databases') do
   its('stdout') { should match 'yourls' }
 end

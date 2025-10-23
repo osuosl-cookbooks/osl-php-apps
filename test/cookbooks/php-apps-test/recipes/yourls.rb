@@ -5,14 +5,9 @@ end
 
 osl_php_install 'yourls' do
   version '8.4'
-  notifies :reload, 'service[php-fpm]'
 end
 
-service 'php-fpm' do
-  action :nothing
-end
-
-osl_php_apps_yourls 'yourls.example.com' do
+osl_php_yourls 'yourls.example.com' do
   version '1.10'
   db_username 'yourls_owner'
   db_password 'yourls_password'
@@ -24,5 +19,3 @@ osl_php_apps_yourls 'yourls.example.com' do
   ]
   cookiekey '0h4U_DP&fGgxUFOD-044UZma_W8n)DVTs1B)gbx-'
 end
-
-

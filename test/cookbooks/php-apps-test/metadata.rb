@@ -8,11 +8,9 @@ source_url       'https://github.com/osuosl-cookbooks/osl-php-apps'
 description      'Installs/Configures php-apps-test'
 version          '0.1.0'
 
-
-depends          'osl-mysql'
-depends          'osl-php'
-depends          'osl-php-apps'
-depends          'osl-apache'
-
 supports         'almalinux', '~> 8.0'
 supports         'almalinux', '~> 9.0'
+supports         'almalinux', '~> 10.0'
+
+depends          'osl-mysql'
+depends          'osl-php-apps'

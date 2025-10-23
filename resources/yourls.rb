@@ -1,36 +1,36 @@
-resource_name :osl_php_apps_yourls
-provides :osl_php_apps_yourls
+resource_name :osl_php_yourls
+provides :osl_php_yourls
 unified_mode true
 
 default_action :install
 
-property :version, String, default: '1.4'
-property :fqdn, String, name_property: true
-property :db_username, String
-property :db_password, String, sensitive: true
-property :db_name, String
-property :db_host, String
-property :db_prefix, String, default: 'yourls_'
-property :domain, String, sensitive: true
-property :language, String, default: '', sensitive: true
-property :unique_urls, [true, false], default: true, sensitive: true
-property :private, [true, false], default: true, sensitive: true
 property :cookiekey, String, sensitive: true
-property :user_passwords, Array, default: [], sensitive: true
-property :url_convert, Integer, default: 36
+property :db_host, String
+property :db_name, String
+property :db_password, String, sensitive: true
+property :db_prefix, String, default: 'yourls_'
+property :db_username, String
+property :domain, String, sensitive: true
+property :fqdn, String, name_property: true
+property :language, String, default: '', sensitive: true
+property :private, [true, false], default: true, sensitive: true
 property :reserved_urls, Array, default: []
+property :unique_urls, [true, false], default: true, sensitive: true
+property :url_convert, Integer, default: 36
+property :user_passwords, Array, default: [], sensitive: true
+property :version, String, default: '1.4'
 
 action :install do
   package %w(php-mysqlnd tar)
 
-include_recipe 'osl-selinux'
-include_recipe 'osl-apache'
+  include_recipe 'osl-apache'
+  include_recipe 'osl-selinux'
 
-%w(proxy proxy_fcgi).each do |m|
-  apache2_module m do
-    notifies :reload, 'apache2_service[osuosl]'
+  %w(proxy proxy_fcgi).each do |m|
+    apache2_module m do
+      notifies :reload, 'apache2_service[osuosl]'
+    end
   end
-end
 
   yourls_version = osl_github_latest_version('yourls/yourls', new_resource.version)
 
@@ -66,21 +66,16 @@ end
   end
 
   cookbook_file "/var/www/#{new_resource.name}/yourls/.htaccess" do
-    source '.htaccess'
-    owner 'root'
-    group 'root'
-    mode '0644'
+    source 'yourls/htaccess'
     cookbook 'osl-php-apps'
   end
 
-  fpm_settings = osl_php_fpm_settings(52)
-
   php_fpm_pool "#{new_resource.name}" do
     listen "/var/run/#{new_resource.name}-fpm.sock"
-    max_children fpm_settings['max_children']
-    start_servers fpm_settings['start_servers']
-    min_spare_servers fpm_settings['min_spare_servers']
-    max_spare_servers fpm_settings['max_spare_servers']
+    max_children 15
+    start_servers 4
+    min_spare_servers 2
+    max_spare_servers 6
   end
 
   yourls_webroot = "/var/www/#{new_resource.name}/yourls"

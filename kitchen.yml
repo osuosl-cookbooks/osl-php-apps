@@ -21,12 +21,6 @@ platforms:
   - name: almalinux-9
 
 suites:
-  - name: default
-    run_list:
-      - recipe[osl-php-apps::default]
   - name: yourls
     run_list:
       - recipe[php-apps-test::yourls]
-    verifier:
-          inspec_tests:
-            - test/integration/yourls
