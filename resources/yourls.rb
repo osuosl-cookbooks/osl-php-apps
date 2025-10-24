@@ -11,6 +11,10 @@ property :db_password, String, sensitive: true
 property :db_prefix, String, default: 'yourls_'
 property :db_username, String
 property :domain, String, sensitive: true
+property :fpm_max_children, Integer, default: 15
+property :fpm_max_spare_servers, Integer, default: 6
+property :fpm_min_spare_servers, Integer, default: 2
+property :fpm_start_servers, Integer, default: 4
 property :fqdn, String, name_property: true
 property :language, String, default: '', sensitive: true
 property :private, [true, false], default: true, sensitive: true
@@ -72,10 +76,10 @@ action :install do
 
   php_fpm_pool "#{new_resource.name}" do
     listen "/var/run/#{new_resource.name}-fpm.sock"
-    max_children 15
-    start_servers 4
-    min_spare_servers 2
-    max_spare_servers 6
+    max_children new_resource.fpm_max_children
+    start_servers new_resource.fpm_start_servers
+    min_spare_servers new_resource.fpm_min_spare_servers
+    max_spare_servers new_resource.fpm_max_spare_servers
   end
 
   yourls_webroot = "/var/www/#{new_resource.name}/yourls"
