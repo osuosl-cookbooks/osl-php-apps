@@ -22,10 +22,10 @@ property :reserved_urls, Array, default: []
 property :unique_urls, [true, false], default: true, sensitive: true
 property :url_convert, Integer, default: 36
 property :user_passwords, Array, default: [], sensitive: true
-property :version, String, default: '1.4'
+property :version, String, default: '1.'
 
 action :install do
-  package %w(php-mysqlnd tar)
+  package 'tar'
 
   include_recipe 'osl-apache'
   include_recipe 'osl-selinux'
@@ -52,6 +52,7 @@ action :install do
   template "/var/www/#{new_resource.name}/yourls/user/config.php" do
     source 'config.php.erb'
     cookbook 'osl-php-apps'
+    sensitive true
     variables(
         cookiekey: new_resource.cookiekey,
         db_host: new_resource.db_host,

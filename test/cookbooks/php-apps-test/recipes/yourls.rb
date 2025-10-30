@@ -5,10 +5,10 @@ end
 
 osl_php_install 'yourls' do
   version '8.4'
+  php_packages %w(fpm mysqlnd)
 end
 
 osl_php_yourls 'yourls.example.com' do
-  version '1.10'
   db_username 'yourls_owner'
   db_password 'yourls_password'
   db_name 'yourls'

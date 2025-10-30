@@ -11,7 +11,7 @@ describe 'php-apps-test::yourls' do
         expect { chef_run }.to_not raise_error
       end
 
-      it { is_expected.to install_package %w(php-mysqlnd tar) }
+      it { is_expected.to install_package 'tar' }
 
       %w(osl-apache osl-selinux).each do |r|
         it { is_expected.to include_recipe r }
@@ -34,6 +34,7 @@ describe 'php-apps-test::yourls' do
         is_expected.to create_template('/var/www/yourls.example.com/yourls/user/config.php').with(
           source: 'config.php.erb',
           cookbook: 'osl-php-apps',
+          sensitive: true,
           variables: {
             cookiekey: '0h4U_DP&fGgxUFOD-044UZma_W8n)DVTs1B)gbx-',
             db_host: 'localhost',

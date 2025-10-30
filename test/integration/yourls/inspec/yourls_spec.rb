@@ -1,5 +1,4 @@
-
-%w(php-mysqlnd tar).each do |p|
+%w(php-fpm php-mysqlnd tar).each do |p|
   describe package(p) do
     it { should be_installed }
   end
