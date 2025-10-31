@@ -5,7 +5,7 @@ end
 
 osl_php_install 'yourls' do
   version '8.4'
-  php_packages %w(fpm mysqlnd)
+  php_packages %w(mysqlnd)
 end
 
 osl_php_yourls 'yourls.example.com' do

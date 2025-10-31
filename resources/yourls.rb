@@ -22,7 +22,7 @@ property :reserved_urls, Array, default: []
 property :unique_urls, [true, false], default: true, sensitive: true
 property :url_convert, Integer, default: 36
 property :user_passwords, Array, default: [], sensitive: true
-property :version, String, default: '1.'
+property :version, String, default: '1.10'
 
 action :install do
   package 'tar'
