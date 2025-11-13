@@ -6,7 +6,7 @@ description       'Installs/Configures osl-php-apps'
 issues_url        'https://github.com/osuosl-cookbooks/osl-php-apps/issues'
 source_url        'https://github.com/osuosl-cookbooks/osl-php-apps'
 chef_version      '>= 18.0'
-version           '0.1.0'
+version           '1.0.0'
 
 supports          'almalinux', '~> 8.0'
 supports          'almalinux', '~> 9.0'
