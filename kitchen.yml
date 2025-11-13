@@ -21,6 +21,6 @@ platforms:
   - name: almalinux-9
 
 suites:
-  - name: default
+  - name: yourls
     run_list:
-      - recipe[osl-php-apps::default]
+      - recipe[php-apps-test::yourls]

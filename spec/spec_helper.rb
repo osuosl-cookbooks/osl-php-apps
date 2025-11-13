@@ -11,31 +11,21 @@ ALMA_9 = {
   version: '9',
 }.freeze
 
-DEBIAN_12 = {
-  platform: 'debian',
-  version: '12',
-}.freeze
-
-UBUNTU_2404 = {
-  platform: 'ubuntu',
-  version: '24.04',
+ALMA_10 = {
+  platform: 'almalinux',
+  version: '10',
 }.freeze
 
 ALL_PLATFORMS = [
   ALMA_8,
   ALMA_9,
-  DEBIAN_12,
-  UBUNTU_2404,
-].freeze
-
-ALL_DEBIAN = [
-  DEBIAN_12,
-  UBUNTU_2404,
+  ALMA_10,
 ].freeze
 
 ALL_RHEL = [
   ALMA_8,
   ALMA_9,
+  ALMA_10,
 ].freeze
 
 RSpec.configure do |config|
