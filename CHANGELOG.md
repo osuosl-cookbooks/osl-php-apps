@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of the osl-php-apps cookbook.
 
+1.0.1 (2026-06-29)
+------------------
+- cinc: updated kitchen and dokken files
+
 1.0.0 (2025-11-13)
 ------------------
 - Add resource for YOURLS
