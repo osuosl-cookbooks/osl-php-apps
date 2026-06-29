@@ -3,6 +3,9 @@ require_relative '../../spec_helper'
 describe 'php-apps-test::yourls' do
   ALL_PLATFORMS.each do |p|
     context "#{p[:platform]} #{p[:version]}" do
+      before do
+        allow_any_instance_of(Chef::Resource).to receive(:osl_github_latest_version).with('yourls/yourls', '1.10').and_return('1.10.2')
+      end
       cached(:chef_run) do
         ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_yourls')).converge(described_recipe)
       end
@@ -24,9 +27,9 @@ describe 'php-apps-test::yourls' do
 
       it do
         is_expected.to put_ark('yourls').with(
-          url: 'https://github.com/YOURLS/YOURLS/archive/refs/tags/1.10.2.tar.gz',
+          url: 'https://github.com/YOURLS/YOURLS/archive/refs/tags/1.10.4.tar.gz',
           path: '/var/www/yourls.example.com',
-          version: '1.10.2'
+          version: '1.10.4'
         )
       end
 

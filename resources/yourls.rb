@@ -75,7 +75,7 @@ action :install do
     cookbook 'osl-php-apps'
   end
 
-  php_fpm_pool "#{new_resource.name}" do
+  php_fpm_pool new_resource.name.to_s do
     listen "/var/run/#{new_resource.name}-fpm.sock"
     max_children new_resource.fpm_max_children
     start_servers new_resource.fpm_start_servers
@@ -85,7 +85,7 @@ action :install do
 
   yourls_webroot = "/var/www/#{new_resource.name}/yourls"
 
-  apache_app "#{new_resource.name}" do
+  apache_app new_resource.name.to_s do
     directory yourls_webroot
     allow_override 'All'
     directory_options %w(FollowSymLinks MultiViews)
