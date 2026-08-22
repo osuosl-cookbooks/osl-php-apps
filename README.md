@@ -1,20 +1,24 @@
 # osl-php-apps
 
-Resource cookbook for managing various PHP applications
+Resource cookbook for managing various PHP applications served by Apache and
+php-fpm at the OSL. Each resource installs and configures one application;
+the wrapper cookbook is expected to provide PHP (via `osl_php_install`) and a
+database (via `osl-mysql`) — see each resource's documentation for a full
+example.
 
-## Requirements
+## Platforms
 
-### Platforms
+The following platforms and versions are tested and supported using
+[test-kitchen](http://kitchen.ci/)
 
-- AlmaLinux 8+
-
-### Cookbooks
-
-## Attributes
+- AlmaLinux 8
+- AlmaLinux 9
+- AlmaLinux 10
 
 ## Resources
 
-## Recipes
+- [osl_php_wordpress](documentation/osl_php_wordpress.md)
+- [osl_php_yourls](documentation/osl_php_yourls.md)
 
 ## Contributing
 

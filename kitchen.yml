@@ -23,3 +23,11 @@ suites:
   - name: yourls
     run_list:
       - recipe[php-apps-test::yourls]
+
+  - name: wordpress
+    run_list:
+      - recipe[php-apps-test::wordpress]
+
+  - name: wordpress-customer-upgrades
+    run_list:
+      - recipe[php-apps-test::wordpress_customer_upgrades]
