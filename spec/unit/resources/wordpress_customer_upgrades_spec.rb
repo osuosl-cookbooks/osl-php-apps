@@ -8,7 +8,10 @@ describe 'php-apps-test::wordpress_customer_upgrades' do
       end
 
       before do
-        allow_any_instance_of(Chef::Resource).to receive(:osl_github_latest_version).with('wp-cli/wp-cli', '2.12', 'tag_name').and_return('2.12.0')
+        allow(Net::HTTP).to receive(:get).and_call_original
+        allow(Net::HTTP).to receive(:get)
+          .with(URI('https://api.github.com/repos/wp-cli/wp-cli/releases'))
+          .and_return([{ 'name' => 'Version 2.12.0', 'tag_name' => 'v2.12.0' }].to_json)
         allow(::File).to receive(:stat).and_call_original
         allow(::File).to receive(:stat)
           .with('/var/www/blog.example.com/wordpress/index.php').and_raise(Errno::ENOENT)

@@ -4,7 +4,10 @@ describe 'php-apps-test::wordpress' do
   ALL_PLATFORMS.each do |p|
     context "#{p[:platform]} #{p[:version]}" do
       before do
-        allow_any_instance_of(Chef::Resource).to receive(:osl_github_latest_version).with('wp-cli/wp-cli', '2.12', 'tag_name').and_return('2.12.0')
+        allow(Net::HTTP).to receive(:get).and_call_original
+        allow(Net::HTTP).to receive(:get)
+          .with(URI('https://api.github.com/repos/wp-cli/wp-cli/releases'))
+          .and_return([{ 'name' => 'Version 2.12.0', 'tag_name' => 'v2.12.0' }].to_json)
         allow(::File).to receive(:exist?).and_call_original
         allow(::File).to receive(:exist?)
           .with('/var/www/wordpress.example.com/wordpress/wp-includes/version.php').and_return(true)

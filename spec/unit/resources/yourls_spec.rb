@@ -4,7 +4,10 @@ describe 'php-apps-test::yourls' do
   ALL_PLATFORMS.each do |p|
     context "#{p[:platform]} #{p[:version]}" do
       before do
-        allow_any_instance_of(Chef::Resource).to receive(:osl_github_latest_version).with('yourls/yourls', '1.10').and_return('1.10.2')
+        allow(Net::HTTP).to receive(:get).and_call_original
+        allow(Net::HTTP).to receive(:get)
+          .with(URI('https://api.github.com/repos/yourls/yourls/releases'))
+          .and_return([{ 'name' => '1.10.4' }].to_json)
       end
       cached(:chef_run) do
         ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_yourls')).converge(described_recipe)
