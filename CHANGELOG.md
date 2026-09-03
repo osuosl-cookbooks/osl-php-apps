@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of the osl-php-apps cookbook.
 
+1.1.0 (2026-09-03)
+------------------
+- Add osl_php_wordpress resource
+
 1.0.1 (2026-06-29)
 ------------------
 - cinc: updated kitchen and dokken files
