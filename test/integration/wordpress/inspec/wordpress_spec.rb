@@ -92,6 +92,7 @@ describe apache_conf('/etc/httpd/sites-available/wordpress.example.com.conf') do
   its('AllowOverride') { should include 'All' }
   its('Require') { should include 'all granted' }
   its('content') { should match 'SetHandler "proxy:unix:/var/run/wordpress.example.com-fpm.sock|fcgi://localhost/"' }
+  its('content') { should match(/^\s+SetEnvIf X-Forwarded-Proto "https" HTTPS=on$/) }
 end
 
 describe mysql_session('wordpress_owner', 'wordpress_password').query('SHOW databases') do

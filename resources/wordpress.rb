@@ -4,6 +4,7 @@ unified_mode true
 
 default_action :install
 
+property :behind_loadbalancer, [true, false], default: true
 property :db_host, String
 property :db_name, String
 property :db_password, String, sensitive: true
@@ -20,6 +21,10 @@ property :version, String, default: '7.1'
 property :wp_cli_version, String, default: '2.12'
 
 action :install do
+  # Sets HTTPS=on from X-Forwarded-Proto in the vhost so WordPress's is_ssl()
+  # works when TLS terminates at the load balancer
+  node.default['osl-apache']['behind_loadbalancer'] = new_resource.behind_loadbalancer
+
   package 'tar'
 
   include_recipe 'osl-apache'

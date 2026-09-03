@@ -21,6 +21,8 @@ describe 'php-apps-test::wordpress_customer_upgrades' do
         expect { chef_run }.to_not raise_error
       end
 
+      it { expect(chef_run.node['osl-apache']['behind_loadbalancer']).to be true }
+
       it do
         is_expected.to put_ark('wordpress').with(
           url: 'https://wordpress.org/wordpress-7.1.tar.gz',

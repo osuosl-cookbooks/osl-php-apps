@@ -26,6 +26,8 @@ describe 'php-apps-test::wordpress' do
 
       it { is_expected.to install_package 'tar' }
 
+      it { expect(chef_run.node['osl-apache']['behind_loadbalancer']).to be true }
+
       %w(osl-apache osl-selinux).each do |r|
         it { is_expected.to include_recipe r }
       end

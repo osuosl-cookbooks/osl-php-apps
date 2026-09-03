@@ -34,6 +34,10 @@ describe file '/var/www/blog.example.com/wordpress/wp-config.php' do
   its('content') { should_not match /AUTOMATIC_UPDATER_DISABLED/ }
 end
 
+describe apache_conf('/etc/httpd/sites-available/blog.example.com.conf') do
+  its('content') { should match(/^\s+SetEnvIf X-Forwarded-Proto "https" HTTPS=on$/) }
+end
+
 # A fresh install redirects to the WordPress installer
 describe http('http://localhost/', headers: { 'host' => 'blog.example.com' }) do
   its('status') { should eq 302 }

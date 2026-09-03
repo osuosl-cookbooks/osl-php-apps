@@ -18,6 +18,7 @@ examples below.
 
 | Property                | Type        | Default  | Required | Description                                                             |
 |-------------------------|-------------|----------|----------|-------------------------------------------------------------------------|
+| `behind_loadbalancer`   | true, false | `true`   | no       | Honor `X-Forwarded-Proto` from a TLS-terminating load balancer          |
 | `db_host`               | String      |          | no       | Database host (`DB_HOST`)                                               |
 | `db_name`               | String      |          | no       | Database name (`DB_NAME`)                                               |
 | `db_password`           | String      |          | no       | Database password (`DB_PASSWORD`)                                       |
@@ -32,6 +33,16 @@ examples below.
 | `self_managed`          | true, false | `false`  | no       | Customer manages the instance themselves, see [Upgrades](#upgrades)     |
 | `version`               | String      | `7.1`    | no       | WordPress version to install (and upgrade to when Chef-managed)         |
 | `wp_cli_version`        | String      | `2.12`   | no       | WP-CLI version prefix, resolved to the latest matching GitHub release   |
+
+## Load balancers
+
+OSL sites usually sit behind a TLS-terminating load balancer, so the backend
+only sees plain HTTP. `behind_loadbalancer` (default `true`) sets
+`osl-apache`'s attribute of the same name, making the vhost translate the
+load balancer's `X-Forwarded-Proto` header into `HTTPS=on` — without it,
+WordPress's `is_ssl()` returns false and pages served over `https://` link
+their assets with `http://` URLs (mixed content). Set it to `false` only for
+an instance serving TLS directly.
 
 ## Upgrades
 
@@ -60,11 +71,30 @@ install.
 ## Salts
 
 The `salts` property renders the WordPress
-[authentication unique keys and salts](https://api.wordpress.org/secret-key/1.1/salt/)
+[authentication unique keys and salts](https://developer.wordpress.org/apis/wp-config-php/#security-keys)
 (`AUTH_KEY`, `SECURE_AUTH_KEY`, ..., `NONCE_SALT`) into `wp-config.php`, keyed
 by constant name. If unset, WordPress generates secrets itself and stores them
 in the database. Note that rotating salts invalidates every user's login
 cookies, and on self-managed instances they only apply at bootstrap.
+
+### Generating salts
+
+The salts are opaque random strings — generate them once per site and store
+the hash in the site's encrypted data bag alongside the database credentials.
+This one-liner prints a data-bag-ready JSON object:
+
+```bash
+ruby -rsecurerandom -rjson -e 'puts JSON.pretty_generate(
+  %w(AUTH_KEY SECURE_AUTH_KEY LOGGED_IN_KEY NONCE_KEY
+     AUTH_SALT SECURE_AUTH_SALT LOGGED_IN_SALT NONCE_SALT)
+  .to_h { |k| [k, SecureRandom.alphanumeric(64)] })'
+```
+
+Alternatively, WordPress's official generator at
+<https://api.wordpress.org/secret-key/1.1/salt/> returns fresh `define(...)`
+lines to copy values from. Avoid `'` and `\` in the values — they are rendered
+inside single-quoted PHP strings (`SecureRandom.alphanumeric` and the official
+generator both produce safe output).
 
 ## Examples
 
