@@ -30,8 +30,11 @@ action :install do
   include_recipe 'osl-apache'
   include_recipe 'osl-selinux'
 
+  # Only enable the modules; proxy.conf is owned by whoever cares about its
+  # <Proxy *> policy (e.g. osl-apache::anubis), fcgi does not consult it
   %w(proxy proxy_fcgi).each do |m|
     apache2_module m do
+      conf false
       notifies :reload, 'apache2_service[osuosl]'
     end
   end
@@ -55,9 +58,8 @@ action :install do
     not_if { ::File.exist?("#{wordpress_webroot}/wp-load.php") }
   end
 
-  # Customers and their plugins modify these files (e.g. WP_CACHE in
-  # wp-config.php or rewrite rules in .htaccess), so only bootstrap them on
-  # self-managed instances
+  # Customers and their plugins modify these files, so only bootstrap them
+  # on self-managed instances
   config_action = new_resource.self_managed ? :create_if_missing : :create
 
   template "#{wordpress_webroot}/wp-config.php" do
