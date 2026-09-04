@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of the osl-php-apps cookbook.
 
+1.1.2 (2026-09-04)
+------------------
+- Stop managing mods-available/proxy.conf in app resources
+
 1.1.1 (2026-09-03)
 ------------------
 - Add behind_loadbalancer property to osl_php_wordpress
