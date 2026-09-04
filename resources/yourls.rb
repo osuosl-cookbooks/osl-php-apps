@@ -30,8 +30,11 @@ action :install do
   include_recipe 'osl-apache'
   include_recipe 'osl-selinux'
 
+  # Only enable the modules; proxy.conf is owned by whoever cares about its
+  # <Proxy *> policy (e.g. osl-apache::anubis), fcgi does not consult it
   %w(proxy proxy_fcgi).each do |m|
     apache2_module m do
+      conf false
       notifies :reload, 'apache2_service[osuosl]'
     end
   end

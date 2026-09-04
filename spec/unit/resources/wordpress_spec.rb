@@ -33,7 +33,7 @@ describe 'php-apps-test::wordpress' do
       end
 
       %w(proxy proxy_fcgi).each do |m|
-        it { is_expected.to enable_apache2_module m }
+        it { is_expected.to enable_apache2_module(m).with(conf: false) }
         it { expect(chef_run.apache2_module(m)).to notify('apache2_service[osuosl]').to(:reload) }
       end
 
