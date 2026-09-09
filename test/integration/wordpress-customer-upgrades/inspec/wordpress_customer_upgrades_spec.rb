@@ -38,13 +38,21 @@ describe apache_conf('/etc/httpd/sites-available/blog.example.com.conf') do
   its('content') { should match(/^\s+SetEnvIf X-Forwarded-Proto "https" HTTPS=on$/) }
 end
 
-# A fresh install redirects to the WordPress installer
+# Self-managed instances are installed by Chef too, so the customer takes
+# over an already-secured site
+describe command('/usr/local/bin/wp core is-installed --path=/var/www/blog.example.com/wordpress --allow-root') do
+  its('exit_status') { should eq 0 }
+end
+
 describe http('http://localhost/', headers: { 'host' => 'blog.example.com' }) do
-  its('status') { should eq 302 }
-  its('headers.Location') { should match 'wp-admin/install.php' }
+  its('status') { should eq 200 }
 end
 
 describe http('http://localhost/wp-admin/install.php', headers: { 'host' => 'blog.example.com' }) do
-  its('status') { should eq 200 }
-  its('body') { should match 'WordPress' }
+  its('body') { should match(/already installed/i) }
+end
+
+describe http('http://localhost/wp-admin/', headers: { 'host' => 'blog.example.com' }) do
+  its('status') { should eq 302 }
+  its('headers.Location') { should match 'wp-login.php' }
 end

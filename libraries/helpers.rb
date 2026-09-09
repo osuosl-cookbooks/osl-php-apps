@@ -2,6 +2,7 @@ module OSLPhpApps
   module Cookbook
     module Helpers
       require 'etc'
+      require 'shellwords'
 
       # Return true if the WordPress webroot is owned by apache so WordPress
       # can upgrade itself from the dashboard

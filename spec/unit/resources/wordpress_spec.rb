@@ -15,6 +15,8 @@ describe 'php-apps-test::wordpress' do
         allow(::File).to receive(:read)
           .with('/var/www/wordpress.example.com/wordpress/wp-includes/version.php')
           .and_return(%($wp_version = '7.1';))
+        stub_command('/usr/local/bin/wp core is-installed --path=/var/www/wordpress.example.com/wordpress --allow-root')
+          .and_return(false)
       end
       cached(:chef_run) do
         ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_wordpress')).converge(described_recipe)
@@ -90,6 +92,27 @@ describe 'php-apps-test::wordpress' do
           owner: 'apache',
           group: 'apache'
         )
+      end
+
+      it do
+        is_expected.to run_execute('wp core install wordpress.example.com').with(
+          command: '/usr/local/bin/wp core install --url=http://wordpress.example.com --title=Test\ Site ' \
+                   '--admin_user=oslapps --admin_password=adminpassword --admin_email=admin@example.com ' \
+                   '--skip-email --path=/var/www/wordpress.example.com/wordpress --allow-root',
+          sensitive: true
+        )
+      end
+
+      context 'already installed' do
+        before do
+          stub_command('/usr/local/bin/wp core is-installed --path=/var/www/wordpress.example.com/wordpress --allow-root')
+            .and_return(true)
+        end
+        cached(:chef_run) do
+          ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_wordpress')).converge(described_recipe)
+        end
+
+        it { is_expected.to_not run_execute('wp core install wordpress.example.com') }
       end
 
       it { is_expected.to_not run_execute('chown -R apache:apache /var/www/wordpress.example.com/wordpress') }

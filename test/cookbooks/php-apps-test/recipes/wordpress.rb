@@ -13,6 +13,12 @@ osl_php_wordpress 'wordpress.example.com' do
   db_password 'wordpress_password'
   db_name 'wordpress'
   db_host 'localhost'
+  admin_user 'oslapps'
+  admin_password 'adminpassword'
+  admin_email 'admin@example.com'
+  site_title 'Test Site'
+  # No TLS terminator in front of the test instance
+  url 'http://wordpress.example.com'
   salts(
     'AUTH_KEY' => 'auth_key',
     'SECURE_AUTH_KEY' => 'secure_auth_key',

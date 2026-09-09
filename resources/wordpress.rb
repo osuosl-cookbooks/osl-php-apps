@@ -4,6 +4,9 @@ unified_mode true
 
 default_action :install
 
+property :admin_email, String, required: true
+property :admin_password, String, required: true, sensitive: true
+property :admin_user, String, required: true
 property :behind_loadbalancer, [true, false], default: true
 property :db_host, String
 property :db_name, String
@@ -17,6 +20,8 @@ property :fpm_start_servers, Integer, default: 4
 property :fqdn, String, name_property: true
 property :salts, Hash, default: {}, sensitive: true
 property :self_managed, [true, false], default: false
+property :site_title, String, default: lazy { |r| r.fqdn }
+property :url, String, default: lazy { |r| "#{r.behind_loadbalancer ? 'https' : 'http'}://#{r.fqdn}" }
 property :version, String, default: '7.1'
 property :wp_cli_version, String, default: '2.12'
 
@@ -88,6 +93,24 @@ action :install do
   directory "#{wordpress_webroot}/wp-content" do
     owner 'apache'
     group 'apache'
+  end
+
+  # Complete the install at converge, otherwise the unauthenticated setup
+  # wizard is exposed to anyone who reaches the site first
+  execute "wp core install #{new_resource.name}" do
+    command [
+      '/usr/local/bin/wp core install',
+      "--url=#{new_resource.url.shellescape}",
+      "--title=#{new_resource.site_title.shellescape}",
+      "--admin_user=#{new_resource.admin_user.shellescape}",
+      "--admin_password=#{new_resource.admin_password.shellescape}",
+      "--admin_email=#{new_resource.admin_email.shellescape}",
+      '--skip-email',
+      "--path=#{wordpress_webroot}",
+      '--allow-root',
+    ].join(' ')
+    sensitive true
+    not_if "/usr/local/bin/wp core is-installed --path=#{wordpress_webroot} --allow-root"
   end
 
   # Self-managed instances upgrade WordPress from the dashboard, which
