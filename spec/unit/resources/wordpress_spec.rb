@@ -1,6 +1,9 @@
 require_relative '../../spec_helper'
 
 describe 'php-apps-test::wordpress' do
+  is_installed = '/usr/local/bin/wp core is-installed ' \
+                 '--path=/var/www/wordpress.example.com/wordpress --allow-root'
+
   ALL_PLATFORMS.each do |p|
     context "#{p[:platform]} #{p[:version]}" do
       before do
@@ -15,8 +18,9 @@ describe 'php-apps-test::wordpress' do
         allow(::File).to receive(:read)
           .with('/var/www/wordpress.example.com/wordpress/wp-includes/version.php')
           .and_return(%($wp_version = '7.1';))
-        stub_command('/usr/local/bin/wp core is-installed --path=/var/www/wordpress.example.com/wordpress --allow-root')
-          .and_return(false)
+        stubs_for_resource('execute[wp core install wordpress.example.com]') do |res|
+          allow(res).to receive_shell_out(is_installed, exitstatus: 1)
+        end
       end
       cached(:chef_run) do
         ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_wordpress')).converge(described_recipe)
@@ -105,8 +109,9 @@ describe 'php-apps-test::wordpress' do
 
       context 'already installed' do
         before do
-          stub_command('/usr/local/bin/wp core is-installed --path=/var/www/wordpress.example.com/wordpress --allow-root')
-            .and_return(true)
+          stubs_for_resource('execute[wp core install wordpress.example.com]') do |res|
+            allow(res).to receive_shell_out(is_installed, exitstatus: 0)
+          end
         end
         cached(:chef_run) do
           ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_wordpress')).converge(described_recipe)

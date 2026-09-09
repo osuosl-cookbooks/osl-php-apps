@@ -15,8 +15,12 @@ describe 'php-apps-test::wordpress_customer_upgrades' do
         allow(::File).to receive(:stat).and_call_original
         allow(::File).to receive(:stat)
           .with('/var/www/blog.example.com/wordpress/index.php').and_raise(Errno::ENOENT)
-        stub_command('/usr/local/bin/wp core is-installed --path=/var/www/blog.example.com/wordpress --allow-root')
-          .and_return(false)
+        stubs_for_resource('execute[wp core install blog.example.com]') do |res|
+          allow(res).to receive_shell_out(
+            '/usr/local/bin/wp core is-installed --path=/var/www/blog.example.com/wordpress --allow-root',
+            exitstatus: 1
+          )
+        end
       end
 
       it 'converges successfully' do

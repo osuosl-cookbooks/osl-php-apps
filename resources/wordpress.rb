@@ -48,7 +48,7 @@ action :install do
 
   wp_cli_version = osl_github_latest_version('wp-cli/wp-cli', new_resource.wp_cli_version, 'tag_name')
 
-  remote_file '/usr/local/bin/wp' do
+  remote_file wp_cli_path do
     source "https://github.com/wp-cli/wp-cli/releases/download/v#{wp_cli_version}/wp-cli-#{wp_cli_version}.phar"
     mode '0755'
   end
@@ -98,19 +98,16 @@ action :install do
   # Complete the install at converge, otherwise the unauthenticated setup
   # wizard is exposed to anyone who reaches the site first
   execute "wp core install #{new_resource.name}" do
-    command [
-      '/usr/local/bin/wp core install',
-      "--url=#{new_resource.url.shellescape}",
-      "--title=#{new_resource.site_title.shellescape}",
-      "--admin_user=#{new_resource.admin_user.shellescape}",
-      "--admin_password=#{new_resource.admin_password.shellescape}",
-      "--admin_email=#{new_resource.admin_email.shellescape}",
-      '--skip-email',
-      "--path=#{wordpress_webroot}",
-      '--allow-root',
-    ].join(' ')
+    command wordpress_install_cmd(
+      wordpress_webroot,
+      url: new_resource.url,
+      title: new_resource.site_title,
+      admin_user: new_resource.admin_user,
+      admin_password: new_resource.admin_password,
+      admin_email: new_resource.admin_email
+    )
     sensitive true
-    not_if "/usr/local/bin/wp core is-installed --path=#{wordpress_webroot} --allow-root"
+    not_if { wordpress_installed?(wordpress_webroot) }
   end
 
   # Self-managed instances upgrade WordPress from the dashboard, which
@@ -123,14 +120,14 @@ action :install do
     # Upgrade core files with WordPress's own upgrader when the pinned version
     # changes, then run any pending database migrations
     execute "wp core update #{new_resource.name}" do
-      command "/usr/local/bin/wp core update --version=#{new_resource.version} --force --path=#{wordpress_webroot} --allow-root"
+      command wordpress_wp_cli(wordpress_webroot, 'core update', "--version=#{new_resource.version}", '--force')
       live_stream true
       not_if { wordpress_version?(wordpress_webroot, new_resource.version) }
       notifies :run, "execute[wp core update-db #{new_resource.name}]"
     end
 
     execute "wp core update-db #{new_resource.name}" do
-      command "/usr/local/bin/wp core update-db --path=#{wordpress_webroot} --allow-root"
+      command wordpress_wp_cli(wordpress_webroot, 'core update-db')
       live_stream true
       action :nothing
     end
