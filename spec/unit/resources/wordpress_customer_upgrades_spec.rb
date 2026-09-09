@@ -15,6 +15,12 @@ describe 'php-apps-test::wordpress_customer_upgrades' do
         allow(::File).to receive(:stat).and_call_original
         allow(::File).to receive(:stat)
           .with('/var/www/blog.example.com/wordpress/index.php').and_raise(Errno::ENOENT)
+        stubs_for_resource('execute[wp core install blog.example.com]') do |res|
+          allow(res).to receive_shell_out(
+            '/usr/local/bin/wp core is-installed --path=/var/www/blog.example.com/wordpress --allow-root',
+            exitstatus: 1
+          )
+        end
       end
 
       it 'converges successfully' do
@@ -63,6 +69,10 @@ describe 'php-apps-test::wordpress_customer_upgrades' do
           cookbook: 'osl-php-apps'
         )
       end
+
+      # Self-managed instances are installed by Chef too, the customer only
+      # takes over afterwards
+      it { is_expected.to run_execute('wp core install blog.example.com') }
 
       it { is_expected.to run_execute('chown -R apache:apache /var/www/blog.example.com/wordpress') }
 

@@ -18,6 +18,9 @@ examples below.
 
 | Property                | Type        | Default  | Required | Description                                                             |
 |-------------------------|-------------|----------|----------|-------------------------------------------------------------------------|
+| `admin_email`           | String      |          | **yes**  | Email of the initial WordPress admin account                            |
+| `admin_password`        | String      |          | **yes**  | Password of the initial WordPress admin account                         |
+| `admin_user`            | String      |          | **yes**  | Login of the initial WordPress admin account                            |
 | `behind_loadbalancer`   | true, false | `true`   | no       | Honor `X-Forwarded-Proto` from a TLS-terminating load balancer          |
 | `db_host`               | String      |          | no       | Database host (`DB_HOST`)                                               |
 | `db_name`               | String      |          | no       | Database name (`DB_NAME`)                                               |
@@ -31,8 +34,26 @@ examples below.
 | `fqdn`                  | String      | name     | no       | FQDN of the site vhost, defaults to the resource name                   |
 | `salts`                 | Hash        | `{}`     | no       | WordPress authentication keys and salts, see [Salts](#salts)            |
 | `self_managed`          | true, false | `false`  | no       | Customer manages the instance themselves, see [Upgrades](#upgrades)     |
+| `site_title`            | String      | fqdn     | no       | Site title recorded at install time                                     |
+| `url`                   | String      | see note | no       | Site URL (`siteurl`/`home`), defaults to the scheme implied by `behind_loadbalancer` plus the fqdn |
 | `version`               | String      | `7.1`    | no       | WordPress version to install (and upgrade to when Chef-managed)         |
 | `wp_cli_version`        | String      | `2.12`   | no       | WP-CLI version prefix, resolved to the latest matching GitHub release   |
+
+## Installation
+
+The resource completes the WordPress installation during the converge with
+`wp core install`, creating the admin account from `admin_user`,
+`admin_password` and `admin_email`. This is why those properties are required:
+an installed-but-unclaimed WordPress serves its setup wizard to anyone who
+requests it, and new hostnames are probed by install-hijack bots within hours
+of the TLS certificate appearing in Certificate Transparency logs. Anyone
+reaching the wizard first becomes the site's administrator and can execute
+code through the plugin installer.
+
+Store the admin password in the site's encrypted data bag alongside the
+database credentials, and hand it to the customer out of band. The step is
+guarded by `wp core is-installed`, so it runs once and never touches an
+existing site.
 
 ## Load balancers
 
@@ -111,6 +132,9 @@ osl_php_wordpress 'blog.example.org' do
   db_name 'wordpress'
   db_username 'wordpress_owner'
   db_password 'wordpress_password'
+  admin_user 'oslapps'
+  admin_password 'admin_password'
+  admin_email 'admin@example.org'
   salts(
     'AUTH_KEY' => '...',
     'SECURE_AUTH_KEY' => '...',
@@ -132,6 +156,9 @@ osl_php_wordpress 'blog.example.org' do
   db_name 'wordpress'
   db_username 'wordpress_owner'
   db_password 'wordpress_password'
+  admin_user 'oslapps'
+  admin_password 'admin_password'
+  admin_email 'admin@example.org'
   self_managed true
 end
 ```

@@ -1,6 +1,9 @@
 require_relative '../../spec_helper'
 
 describe 'php-apps-test::wordpress' do
+  is_installed = '/usr/local/bin/wp core is-installed ' \
+                 '--path=/var/www/wordpress.example.com/wordpress --allow-root'
+
   ALL_PLATFORMS.each do |p|
     context "#{p[:platform]} #{p[:version]}" do
       before do
@@ -15,6 +18,9 @@ describe 'php-apps-test::wordpress' do
         allow(::File).to receive(:read)
           .with('/var/www/wordpress.example.com/wordpress/wp-includes/version.php')
           .and_return(%($wp_version = '7.1';))
+        stubs_for_resource('execute[wp core install wordpress.example.com]') do |res|
+          allow(res).to receive_shell_out(is_installed, exitstatus: 1)
+        end
       end
       cached(:chef_run) do
         ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_wordpress')).converge(described_recipe)
@@ -90,6 +96,28 @@ describe 'php-apps-test::wordpress' do
           owner: 'apache',
           group: 'apache'
         )
+      end
+
+      it do
+        is_expected.to run_execute('wp core install wordpress.example.com').with(
+          command: '/usr/local/bin/wp core install --url=http://wordpress.example.com --title=Test\ Site ' \
+                   '--admin_user=oslapps --admin_password=adminpassword --admin_email=admin@example.com ' \
+                   '--skip-email --path=/var/www/wordpress.example.com/wordpress --allow-root',
+          sensitive: true
+        )
+      end
+
+      context 'already installed' do
+        before do
+          stubs_for_resource('execute[wp core install wordpress.example.com]') do |res|
+            allow(res).to receive_shell_out(is_installed, exitstatus: 0)
+          end
+        end
+        cached(:chef_run) do
+          ChefSpec::SoloRunner.new(p.merge(step_into: 'osl_php_wordpress')).converge(described_recipe)
+        end
+
+        it { is_expected.to_not run_execute('wp core install wordpress.example.com') }
       end
 
       it { is_expected.to_not run_execute('chown -R apache:apache /var/www/wordpress.example.com/wordpress') }

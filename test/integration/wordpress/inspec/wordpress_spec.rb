@@ -74,15 +74,29 @@ describe http('http://localhost') do
   its('headers.Content-Type') { should match 'text/html' }
 end
 
-# A fresh install redirects to the WordPress installer
+# Chef completes the install so the setup wizard is never exposed
+describe command('/usr/local/bin/wp core is-installed --path=/var/www/wordpress.example.com/wordpress --allow-root') do
+  its('exit_status') { should eq 0 }
+end
+
 describe http('http://localhost/', headers: { 'host' => 'wordpress.example.com' }) do
-  its('status') { should eq 302 }
-  its('headers.Location') { should match 'wp-admin/install.php' }
+  its('status') { should eq 200 }
+  its('body') { should match 'Test Site' }
 end
 
 describe http('http://localhost/wp-admin/install.php', headers: { 'host' => 'wordpress.example.com' }) do
+  its('body') { should match(/already installed/i) }
+end
+
+# wp-admin is gated by the login form
+describe http('http://localhost/wp-admin/', headers: { 'host' => 'wordpress.example.com' }) do
+  its('status') { should eq 302 }
+  its('headers.Location') { should match 'wp-login.php' }
+end
+
+describe http('http://localhost/wp-login.php', headers: { 'host' => 'wordpress.example.com' }) do
   its('status') { should eq 200 }
-  its('body') { should match 'WordPress' }
+  its('body') { should match 'user_login' }
 end
 
 describe apache_conf('/etc/httpd/sites-available/wordpress.example.com.conf') do
