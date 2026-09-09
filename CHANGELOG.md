@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of the osl-php-apps cookbook.
 
+2.0.0 (2026-09-09)
+------------------
+- Complete the WordPress install at converge
+
 1.1.2 (2026-09-04)
 ------------------
 - Stop managing mods-available/proxy.conf in app resources
