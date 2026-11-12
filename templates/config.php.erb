@@ -13,6 +13,9 @@ define( 'YOURLS_LANG', '<%= @language %>' );
 define( 'YOURLS_UNIQUE_URLS', <%= @unique_urls %> );
 define( 'YOURLS_PRIVATE', <%= @private%> );
 define( 'YOURLS_COOKIEKEY', '<%= @cookiekey %>'  );
+<% if @no_hash_password -%>
+define( 'YOURLS_NO_HASH_PASSWORD', true );
+<% end -%>
 $yourls_user_passwords = [
 <% @user_passwords.each do |user_hash| -%>
 <%   user_hash.each do |username, password| -%>
