@@ -32,6 +32,8 @@ example below.
 | `fpm_start_servers`     | Integer     | `4`       | no       | php-fpm pool `pm.start_servers`                                      |
 | `fqdn`                  | String      | name      | no       | FQDN of the site vhost, defaults to the resource name                |
 | `language`              | String      | `''`      | no       | Localization (`YOURLS_LANG`)                                         |
+| `no_hash_password`      | true, false | `true`    | no       | Define `YOURLS_NO_HASH_PASSWORD`; Chef owns `config.php`, so YOURLS cannot hash it |
+| `plugins`               | Hash        | `{}`      | no       | Plugins to install, see [Plugins](#plugins)                          |
 | `private`               | true, false | `true`    | no       | Require login to create short URLs (`YOURLS_PRIVATE`)                |
 | `reserved_urls`         | Array       | `[]`      | no       | Keywords that short URLs cannot use (`$yourls_reserved_URL`)         |
 | `unique_urls`           | true, false | `true`    | no       | One short URL per long URL (`YOURLS_UNIQUE_URLS`)                    |
@@ -57,5 +59,28 @@ osl_php_yourls 'yourls.example.com' do
   user_passwords [
     'admin' => 'adminpassword',
   ]
+  plugins(
+    'qr-code-designer' => {
+      'url' => 'https://github.com/example/yourls-qr-plugin/archive/<commit>.tar.gz',
+      'checksum' => '<sha256 of that tarball>',
+    }
+  )
 end
 ```
+
+## Plugins
+
+`plugins` maps a plugin directory name under `user/plugins/` to a tarball
+`url` and its sha256 `checksum`. Each one is unpacked with `ark` (top-level
+directory stripped) and owned by root, so php-fpm cannot change plugin code.
+Chef only installs the files: an admin activates each plugin under
+**Manage Plugins**.
+
+- Pin the URL to a commit archive and set the checksum, so a moved tag
+  cannot change what is installed.
+- Some plugins expect a specific directory name (YOURLS-RBAC must be `rbac`).
+- Keys must be lowercase directory names and cannot be `yourls` or
+  `wordpress`: ark caches every tarball as `<name>.tar.gz`, so those would
+  collide with the core downloads. Two sites on one node using the same key
+  share one cached tarball.
+- Removing an entry does not delete the plugin directory.

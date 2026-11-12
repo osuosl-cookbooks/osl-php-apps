@@ -50,6 +50,7 @@ describe 'php-apps-test::yourls' do
             db_username: 'yourls_owner',
             domain: 'http://yourls.example.com',
             language: '',
+            no_hash_password: true,
             private: true,
             reserved_urls: [],
             unique_urls: true,
@@ -59,6 +60,31 @@ describe 'php-apps-test::yourls' do
             ],
           }
         )
+      end
+
+      it do
+        expect(chef_run).to render_file('/var/www/yourls.example.com/yourls/user/config.php')
+          .with_content("define( 'YOURLS_NO_HASH_PASSWORD', true );")
+      end
+
+      {
+        'qr-code-designer' => {
+          url: 'https://github.com/Waterproof-Web-Wizard-GmbH/yourls-qr-code-designer/archive/09b78f9121dba1d93804f5273c46cbc43e764978.tar.gz',
+          checksum: 'd40f42e2e901892ec71a5b3ef7d18a43d4bcd12601429bf7df049d0adeefd173',
+        },
+        'rbac' => {
+          url: 'https://github.com/saahmadnejad/YOURLS-RBAC/archive/2fe5e6c63be965fc842e2470bb0901cf8dbef23d.tar.gz',
+          checksum: 'a29727968f97552ce20cbfc9d51d906ecfe878196a2896593adb3d1365587653',
+        },
+      }.each do |plugin, source|
+        it do
+          is_expected.to put_ark(plugin).with(
+            url: source[:url],
+            checksum: source[:checksum],
+            path: '/var/www/yourls.example.com/yourls/user/plugins',
+            owner: 'root'
+          )
+        end
       end
 
       it do
@@ -89,6 +115,59 @@ describe 'php-apps-test::yourls' do
             '</FilesMatch>',
           ]
         )
+      end
+    end
+  end
+end
+
+describe 'php-apps-test::yourls_hash_passwords' do
+  before do
+    allow(Net::HTTP).to receive(:get).and_call_original
+    allow(Net::HTTP).to receive(:get)
+      .with(URI('https://api.github.com/repos/yourls/yourls/releases'))
+      .and_return([{ 'name' => '1.10.4' }].to_json)
+  end
+
+  cached(:chef_run) do
+    ChefSpec::SoloRunner.new(ALMA_9.merge(step_into: 'osl_php_yourls')).converge(described_recipe)
+  end
+
+  it do
+    expect(chef_run).to_not render_file('/var/www/yourls.example.com/yourls/user/config.php')
+      .with_content('YOURLS_NO_HASH_PASSWORD')
+  end
+
+  it { expect(chef_run).to_not put_ark('rbac') }
+end
+
+describe 'osl_php_yourls plugins validation' do
+  before do
+    allow(Net::HTTP).to receive(:get).and_call_original
+    allow(Net::HTTP).to receive(:get)
+      .with(URI('https://api.github.com/repos/yourls/yourls/releases'))
+      .and_return([{ 'name' => '1.10.4' }].to_json)
+  end
+
+  {
+    'a key with a space' => { 'Bad Key' => {} },
+    'a parent directory key' => { '..' => {} },
+    'the yourls key' => { 'yourls' => {} },
+    'no checksum' => { 'rbac' => { 'url' => 'https://example.org/rbac.tar.gz' } },
+  }.each do |desc, plugins|
+    context "plugins with #{desc}" do
+      let(:url) { 'https://example.org/p.tar.gz' }
+      let(:sum) { 'a' * 64 }
+      let(:bad) do
+        plugins.transform_values { |v| v.empty? ? { 'url' => url, 'checksum' => sum } : v }
+      end
+      let(:chef_run) do
+        p = bad
+        ChefSpec::SoloRunner.new(platform: 'almalinux', version: '9', step_into: 'osl_php_yourls')
+                            .converge_block { osl_php_yourls('yourls.example.com') { plugins p } }
+      end
+
+      it do
+        expect { chef_run }.to raise_error(Chef::Exceptions::ValidationFailed)
       end
     end
   end

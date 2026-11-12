@@ -23,6 +23,19 @@ module OSLPhpApps
         shell_out(wordpress_wp_cli(webroot, 'core is-installed')).exitstatus == 0
       end
 
+      # Plugin keys become directories under user/plugins; yourls and
+      # wordpress are excluded because ark caches every tarball as <name>.tar.gz
+      def self.yourls_plugins_valid?(plugins)
+        plugins.all? do |name, source|
+          name.is_a?(String) &&
+            name.match?(/\A[a-z0-9][a-z0-9_-]*(\.[a-z0-9_-]+)*\z/) &&
+            !%w(yourls wordpress).include?(name) &&
+            source.is_a?(Hash) &&
+            source['url'].is_a?(String) && !source['url'].empty? &&
+            source['checksum'].is_a?(String) && source['checksum'].match?(/\A\h{64}\z/)
+        end
+      end
+
       def wp_cli_path
         '/usr/local/bin/wp'
       end

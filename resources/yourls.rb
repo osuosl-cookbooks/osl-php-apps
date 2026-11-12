@@ -17,6 +17,11 @@ property :fpm_min_spare_servers, Integer, default: 2
 property :fpm_start_servers, Integer, default: 4
 property :fqdn, String, name_property: true
 property :language, String, default: '', sensitive: true
+property :no_hash_password, [true, false], default: true
+property :plugins, Hash, default: {}, callbacks: {
+  'keys must be plugin directory names (not yourls or wordpress) with a url and a sha256 checksum' =>
+    ->(p) { OSLPhpApps::Cookbook::Helpers.yourls_plugins_valid?(p) },
+}
 property :private, [true, false], default: true, sensitive: true
 property :reserved_urls, Array, default: []
 property :unique_urls, [true, false], default: true, sensitive: true
@@ -65,12 +70,24 @@ action :install do
         db_username: new_resource.db_username,
         domain: new_resource.domain,
         language: new_resource.language,
+        no_hash_password: new_resource.no_hash_password,
         private: new_resource.private,
         reserved_urls: new_resource.reserved_urls,
         unique_urls: new_resource.unique_urls,
         url_convert: new_resource.url_convert,
         user_passwords: new_resource.user_passwords
       )
+  end
+
+  # Root-owned so php-fpm cannot rewrite plugin code; ark only sets the group
+  new_resource.plugins.each do |plugin, source|
+    ark plugin do
+      url source['url']
+      checksum source['checksum']
+      path "/var/www/#{new_resource.name}/yourls/user/plugins"
+      owner 'root'
+      action :put
+    end
   end
 
   cookbook_file "/var/www/#{new_resource.name}/yourls/.htaccess" do
